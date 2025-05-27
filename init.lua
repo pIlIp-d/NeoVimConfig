@@ -93,7 +93,7 @@ vim.g.maplocalleader = ' '
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = false
 
--- [[ Setting options ]]
+--S[[ Setting options ]]
 -- See `:help vim.o`
 -- NOTE: You can change these options as you wish!
 --  For more options, you can see `:help option-list`
@@ -185,11 +185,13 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
 -- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
+vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
+vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
+vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
+vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
+--
+--
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
 --
@@ -376,6 +378,8 @@ require('lazy').setup({
           return vim.fn.executable 'make' == 1
         end,
       },
+      { 'nvim-lua/popup.nvim' },
+      -- { 'nvim-telescope/telescope-media-files.nvim' },
       { 'nvim-telescope/telescope-ui-select.nvim' },
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
@@ -407,32 +411,69 @@ require('lazy').setup({
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
         --
-        -- defaults = {
-        --   mappings = {
-        --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
-        --   },
+        defaults = {
+          vimgrep_arguments = {
+            'rg',
+            '-L',
+            '--color=never',
+            '--no-heading',
+            '--with-filename',
+            '--line-number',
+            '--column',
+            '--smart-case',
+            '--max-filesize=1M',
+          },
+        },
+        -- file_previewer = require('telescope.extensions.media_files.media_previewer').media_file_previewer,
+        -- mappings = {
+        --   i = { ['<c-enter>'] = 'to_fuzzy_refine' },
+        -- },
         -- },
         -- pickers = {}
         extensions = {
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
           },
+          -- ['media-files'] = {
+          -- },
         },
       }
 
       -- Enable Telescope extensions if they are installed
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
+      -- pcall(require('telescope').load_extension, 'media-files')
 
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
       vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
+      -- vim.keymap.set('n', '<leader>sm', '<cmd>Telescope media_files<CR>', { desc = '[S]earch [M]edia Files' })
+
       vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
+
+      -- vim.keymap.set('n', '<leader>fpa', function()
+      --   vim.notify('Fetching workspace diagnostics...', vim.log.levels.INFO, { title = 'Diagnostics' })
+      --   vim.diagnostic.setqflist { workspace = true }
+      --   vim.notify('Workspace diagnostics updated in quickfix list.', vim.log.levels.INFO, { title = 'Diagnostics' })
+      --   require('telescope.builtin').quickfix()
+      -- end, { noremap = true, silent = false, desc = 'Project Diagnostics (via Quickfix)' })
+      -- vim.keymap.set('n', '<leader>da', function()
+      --   require('telescope.builtin').diagnostics {
+      --     bufnr = nil,
+      --     title = 'Project Diagnostics',
+      --   }
+      -- end, { noremap = true, silent = true, desc = 'Diagnostics (All)' })
+      -- vim.keymap.set(
+      --   'n',
+      --   '<leader>sp',
+      --   '<cmd>lua require("telescope.builtin").diagnostics{workspace=true}<CR>',
+      --   { desc = '[S]earch Diagnostics for [P]roject' }
+      -- )
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
@@ -673,7 +714,20 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        -- pyright = {},
+        pyright = {
+          settings = {
+            basedpyright = {
+              analysis = {
+                diagnosticMode = 'workspace',
+              },
+            },
+            python = {
+              analysis = {
+                diagnosticMode = 'workspace',
+              },
+            },
+          },
+        },
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -718,21 +772,28 @@ require('lazy').setup({
         'stylua', -- Used to format Lua code
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
-
-      require('mason-lspconfig').setup {
-        ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
-        automatic_installation = false,
-        handlers = {
-          function(server_name)
-            local server = servers[server_name] or {}
-            -- This handles overriding only values explicitly passed
-            -- by the server configuration above. Useful when disabling
-            -- certain features of an LSP (for example, turning off formatting for ts_ls)
-            server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-            require('lspconfig')[server_name].setup(server)
-          end,
-        },
-      }
+      -- require('mason-lspconfig').setup {
+      --   ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
+      --   -- automatic_installation = false,
+      --   automatic_enable = true,
+      --   -- handlers = {
+      --   --   ['pyright'] = function()
+      --   --     local server_name = 'pyright'
+      --   --     local server = servers[server_name] or {}
+      --   --     -- This handles overriding only values explicitly passed
+      --   --     -- by the server configuration above. Useful when disabling
+      --   --     -- certain features of an LSP (for example, turning off formatting for ts_ls)
+      --   --     vim.notify 'pyright LSP server loading.'
+      --   --     server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+      --   --     require('lspconfig')[server_name].setup(server)
+      --   --   end,
+      --   -- },
+      -- }
+      -- Manually load lsp configs, becuase configs didn't apply
+      for server_name, settings in pairs(servers) do
+        settings.capabilities = vim.tbl_deep_extend('force', {}, capabilities, settings.capabilities or {})
+        require('lspconfig')[server_name].setup(settings)
+      end
     end,
   },
 
@@ -806,6 +867,9 @@ require('lazy').setup({
           --   end,
           -- },
         },
+        -- config = (function()
+        --     require("luasnip.loaders.from_lua").load({paths = "./snippets"})
+        -- end)(),
         opts = {},
       },
       'folke/lazydev.nvim',
@@ -973,13 +1037,13 @@ require('lazy').setup({
   --  Here are some example plugins that I've included in the Kickstart repository.
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
-  -- require 'kickstart.plugins.debug',
-  -- require 'kickstart.plugins.indent_line',
-  -- require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.debug',
+  require 'kickstart.plugins.indent_line',
+  require 'kickstart.plugins.lint',
+  require 'kickstart.plugins.autopairs',
   -- require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
+  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
   --
@@ -990,6 +1054,50 @@ require('lazy').setup({
   -- Or use telescope!
   -- In normal mode type `<space>sh` then write `lazy.nvim-plugin`
   -- you can continue same window with `<space>sr` which resumes last telescope search
+  {
+    'linux-cultist/venv-selector.nvim',
+    dependencies = { 'neovim/nvim-lspconfig', 'nvim-telescope/telescope.nvim', 'mfussenegger/nvim-dap-python' },
+    opts = {
+      -- Your options go here
+      -- name = "venv",
+      -- auto_refresh = false
+    },
+    lazy = false,
+    branch = 'regexp',
+    event = 'VeryLazy', -- Optional: needed only if you want to type `:VenvSelect` without a keymapping
+    keys = {
+      -- Keymap to open VenvSelector to pick a venv.
+      { '<leader>vs', '<cmd>VenvSelect<cr>', { desc = '[V]env [S]elect' } },
+      -- Keymap to retrieve the venv from a cache (the one previously used for the same project directory).
+      { '<leader>vc', '<cmd>VenvSelectCached<cr>', { desc = '[V]env Select [C]ached' } },
+    },
+  },
+  {
+    'akinsho/toggleterm.nvim',
+    version = '*',
+    config = function()
+      require('toggleterm').setup()
+
+      vim.api.nvim_set_keymap('n', '<leader>t1', '<cmd>ToggleTerm 1<CR>', { desc = '[T]erminal 1 Toggle' })
+      vim.api.nvim_set_keymap('n', '<leader>t2', '<cmd>ToggleTerm 2<CR>', { desc = '[T]erminal 2 Toggle' })
+      vim.api.nvim_set_keymap('n', '<leader>t3', '<cmd>ToggleTerm 3<CR>', { desc = '[T]erminal 3 Toggle' })
+      vim.api.nvim_set_keymap('n', '<leader>t4', '<cmd>ToggleTerm 4<CR>', { desc = '[T]erminal 4 Toggle' })
+      vim.api.nvim_set_keymap('n', '<leader>ts', '<cmd>TermSelect<CR>', { desc = '[T]erminal [S]elect' })
+    end,
+  },
+  {
+    'NeogitOrg/neogit',
+    dependencies = {
+      'nvim-lua/plenary.nvim', -- required
+      'sindrets/diffview.nvim', -- optional - Diff integration
+      'nvim-telescope/telescope.nvim',
+    },
+    config = function()
+      require('neogit').setup {}
+
+      vim.api.nvim_set_keymap('n', '<leader>g', '<cmd>Neogit<CR>', { desc = 'Open Neo[G]it' })
+    end,
+  },
 }, {
   ui = {
     -- If you are using a Nerd Font: set icons to an empty table which will use the
@@ -1014,3 +1122,5 @@ require('lazy').setup({
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
+---- custom keybinds
+vim.keymap.set('n', '<leader>nt', '<cmd>Neotree toggle<CR>', { desc = '[N]eotree [T]oggle' })
