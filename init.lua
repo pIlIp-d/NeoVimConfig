@@ -714,20 +714,28 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        pyright = {
-          settings = {
-            basedpyright = {
-              analysis = {
-                diagnosticMode = 'workspace',
-              },
-            },
-            python = {
-              analysis = {
-                diagnosticMode = 'workspace',
-              },
+        -- pyright = {
+        --   settings = {
+        --     basedpyright = {
+        --       analysis = {
+        --         diagnosticMode = 'workspace',
+        --       },
+        --     },
+        --     python = {
+        --       analysis = {
+        --         diagnosticMode = 'workspace',
+        --       },
+        --     },
+        --   },
+        -- },
+        pylsp = {
+          plugins = {
+            pylint = {
+              enabled = true,
             },
           },
         },
+        marksman = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -737,7 +745,6 @@ require('lazy').setup({
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         -- ts_ls = {},
         --
-
         lua_ls = {
           -- cmd = { ... },
           -- filetypes = { ... },
@@ -770,6 +777,8 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
+        'markdownlint-cli2',
+        'markdown-toc',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
       -- require('mason-lspconfig').setup {
@@ -1008,7 +1017,7 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'query', 'vim', 'vimdoc' }, -- "markdown", "markdown_inline"
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -1061,6 +1070,7 @@ require('lazy').setup({
       -- Your options go here
       -- name = "venv",
       -- auto_refresh = false
+      enable_cached_venvs = true,
     },
     lazy = false,
     branch = 'regexp',
@@ -1069,7 +1079,7 @@ require('lazy').setup({
       -- Keymap to open VenvSelector to pick a venv.
       { '<leader>vs', '<cmd>VenvSelect<cr>', { desc = '[V]env [S]elect' } },
       -- Keymap to retrieve the venv from a cache (the one previously used for the same project directory).
-      { '<leader>vc', '<cmd>VenvSelectCached<cr>', { desc = '[V]env Select [C]ached' } },
+      -- { '<leader>vc', '<cmd>VenvSelectCached<cr>', { desc = '[V]env Select [C]ached' } },
     },
   },
   {
@@ -1124,3 +1134,7 @@ require('lazy').setup({
 -- vim: ts=2 sts=2 sw=2 et
 ---- custom keybinds
 vim.keymap.set('n', '<leader>nt', '<cmd>Neotree toggle<CR>', { desc = '[N]eotree [T]oggle' })
+
+-- enable wrap using the arrow keys in insert mode
+vim.opt.whichwrap:append '['
+vim.opt.whichwrap:append ']'
