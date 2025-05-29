@@ -381,7 +381,7 @@ require('lazy').setup({
       { 'nvim-lua/popup.nvim' },
       -- { 'nvim-telescope/telescope-media-files.nvim' },
       { 'nvim-telescope/telescope-ui-select.nvim' },
-
+      { 'artemave/workspace-diagnostics.nvim' },
       -- Useful for getting pretty icons, but requires a Nerd Font.
       { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
     },
@@ -456,6 +456,15 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
 
+      -- add keybinding to populate diagnostics for the current project manually
+      vim.api.nvim_set_keymap('n', '<space>sx', '', {
+        noremap = true,
+        callback = function()
+          for _, client in ipairs(vim.lsp.get_clients()) do
+            require('workspace-diagnostics').populate_workspace_diagnostics(client, 0)
+          end
+        end,
+      })
       -- vim.keymap.set('n', '<leader>fpa', function()
       --   vim.notify('Fetching workspace diagnostics...', vim.log.levels.INFO, { title = 'Diagnostics' })
       --   vim.diagnostic.setqflist { workspace = true }
@@ -731,6 +740,9 @@ require('lazy').setup({
         pylsp = {
           plugins = {
             pylint = {
+              enabled = true,
+            },
+            black = {
               enabled = true,
             },
           },
@@ -1108,6 +1120,28 @@ require('lazy').setup({
       vim.api.nvim_set_keymap('n', '<leader>g', '<cmd>Neogit<CR>', { desc = 'Open Neo[G]it' })
     end,
   },
+  {
+    'rest-nvim/rest.nvim',
+    dependencies = {
+      'nvim-treesitter/nvim-treesitter',
+      opts = function(_, opts)
+        opts.ensure_installed = opts.ensure_installed or {}
+        table.insert(opts.ensure_installed, 'http')
+      end,
+    },
+    config = function()
+      -- set up leader keys for rest.nvim
+      vim.api.nvim_set_keymap('n', '<leader>rr', '<cmd>Rest run<CR>', { desc = '[R]est [R]un' })
+      vim.api.nvim_set_keymap('n', '<leader>rl', '<cmd>Rest logs<CR>', { desc = '[R]est [L]og' })
+      -- setup formatting of json response
+      vim.api.nvim_create_autocmd('FileType', {
+        pattern = { 'json' },
+        callback = function()
+          vim.api.nvim_set_option_value('formatprg', 'jq', { scope = 'local' })
+        end,
+      })
+    end,
+  },
 }, {
   ui = {
     -- If you are using a Nerd Font: set icons to an empty table which will use the
@@ -1133,7 +1167,7 @@ require('lazy').setup({
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
 ---- custom keybinds
-vim.keymap.set('n', '<leader>nt', '<cmd>Neotree toggle<CR>', { desc = '[N]eotree [T]oggle' })
+-- vim.keymap.set('n', '<leader>nt', '<cmd>Neotree toggle<CR>', { desc = '[N]eotree [T]oggle' })
 
 -- enable wrap using the arrow keys in insert mode
 vim.opt.whichwrap:append '['
