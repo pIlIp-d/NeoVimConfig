@@ -190,6 +190,13 @@ vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
 vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
 vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
+local openUrl = function(uri)
+  if url ~= '' then
+    vim.cmd('exec "!open \'' .. url .. '\'"')
+  else
+    vim.cmd 'echo "No URI found in line."'
+  end
+end
 --
 --
 -- Keybinds to make split navigation easier.
@@ -419,17 +426,23 @@ require('lazy').setup({
             '--no-heading',
             '--with-filename',
             '--line-number',
+            '--hidden',
+            '--sort',
+            'path',
             '--column',
             '--smart-case',
             '--max-filesize=1M',
           },
+          file_ignore_patterns = { '.git', '__pycache__', '.pytest_cache' },
         },
         -- file_previewer = require('telescope.extensions.media_files.media_previewer').media_file_previewer,
         -- mappings = {
         --   i = { ['<c-enter>'] = 'to_fuzzy_refine' },
         -- },
         -- },
-        -- pickers = {}
+        -- pickers = {
+        --   find_files = { hidden = true },
+        -- },
         extensions = {
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
@@ -448,7 +461,11 @@ require('lazy').setup({
       local builtin = require 'telescope.builtin'
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-      vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
+      local function _find_files()
+        builtin.find_files { hidden = true, no_ignore = true }
+      end
+
+      vim.keymap.set('n', '<leader>sf', _find_files, { desc = '[S]earch [F]iles' })
       -- vim.keymap.set('n', '<leader>sm', '<cmd>Telescope media_files<CR>', { desc = '[S]earch [M]edia Files' })
 
       vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
@@ -457,7 +474,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
 
       -- add keybinding to populate diagnostics for the current project manually
-      vim.api.nvim_set_keymap('n', '<space>sx', '', {
+      vim.api.nvim_set_keymap('n', '<space>sx', '[S]earch Diagnostics All Files', {
         noremap = true,
         callback = function()
           for _, client in ipairs(vim.lsp.get_clients()) do
@@ -542,6 +559,36 @@ require('lazy').setup({
       -- Allows extra capabilities provided by blink.cmp
       'saghen/blink.cmp',
     },
+    -- init = function(_)
+    --   local pylsp = require('mason-registry').get_package 'python-lsp-server'
+    --   pylsp:on('install:success', function()
+    --     local function mason_package_path(package)
+    --       local path = vim.fn.resolve(vim.fn.stdpath 'data' .. '/mason/packages/' .. package)
+    --       return path
+    --     end
+    --
+    --     local path = mason_package_path 'python-lsp-server'
+    --     local command = path .. '/venv/bin/pip'
+    --     local args = {
+    --       'install',
+    --       '-U',
+    --       'pylsp-rope',
+    --       'python-lsp-black',
+    --       'python-lsp-isort',
+    --       'python-lsp-ruff',
+    --       'pyls-memestra',
+    --       'pylsp-mypy',
+    --     }
+    --
+    --     require('plenary.job')
+    --       :new({
+    --         command = command,
+    --         args = args,
+    --         cwd = path,
+    --       })
+    --       :start()
+    --   end)
+    -- end,
     config = function()
       -- Brief aside: **What is LSP?**
       --
@@ -738,12 +785,35 @@ require('lazy').setup({
         --   },
         -- },
         pylsp = {
-          plugins = {
-            pylint = {
-              enabled = true,
-            },
-            black = {
-              enabled = true,
+          settings = {
+            pylsp = {
+              plugins = {
+                -- formatter options
+                black = { enabled = true },
+                pylint = { enabled = true, pylintArgs = { '--load-plugins=pylint_mongoengine' } },
+                -- pylsp_black = { enabled = true },
+                autopep8 = { enabled = false },
+                -- yapf = { enabled = false },
+                -- -- linter options
+                -- pylint = { enabled = true },
+                pyflakes = { enabled = false },
+                pycodestyle = { enabled = false },
+                -- -- type checker
+                -- pylsp_mypy = { enabled = true },
+                -- -- auto-completion options
+                -- jedi_completion = { fuzzy = true },
+                -- -- import sorting
+                pyls_isort = { enabled = false },
+                --
+                mccabe = { enabled = false },
+                -- pylint = {
+                --   enabled = true,
+                -- },
+                -- black = {
+                --   enabled = true,
+                -- },
+                -- autopep8 = { enabled = false },
+              },
             },
           },
         },
@@ -1116,7 +1186,8 @@ require('lazy').setup({
     },
     config = function()
       require('neogit').setup {}
-
+      vim.api.nvim_set_keymap('n', '<leader>op', '<cmd>:! source ~/.zshrc && openpr<CR>', { desc = '[O]pen [P]ull Request' })
+      vim.api.nvim_set_keymap('n', '<leader>oa', '<cmd>:! source ~/.zshrc && show_prs<CR>', { desc = '[O]pen [A]ll Pull Requests' })
       vim.api.nvim_set_keymap('n', '<leader>g', '<cmd>Neogit<CR>', { desc = 'Open Neo[G]it' })
     end,
   },
@@ -1131,8 +1202,8 @@ require('lazy').setup({
     },
     config = function()
       -- set up leader keys for rest.nvim
-      vim.api.nvim_set_keymap('n', '<leader>rr', '<cmd>Rest run<CR>', { desc = '[R]est [R]un' })
-      vim.api.nvim_set_keymap('n', '<leader>rl', '<cmd>Rest logs<CR>', { desc = '[R]est [L]og' })
+      vim.api.nvim_set_keymap('n', '<leader>r', '<cmd>Rest run<CR>', { desc = '[R]est [R]un' })
+      -- vim.api.nvim_set_keymap('n', '<leader>rl', '<cmd>Rest logs<CR>', { desc = '[R]est [L]og' })
       -- setup formatting of json response
       vim.api.nvim_create_autocmd('FileType', {
         pattern = { 'json' },
