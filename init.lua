@@ -419,6 +419,9 @@ require('lazy').setup({
         --  All the info you're looking for is in `:help telescope.setup()`
         --
         defaults = {
+          preview = {
+            filesize_limit = 0.5,
+          },
           vimgrep_arguments = {
             'rg',
             '-L',
@@ -431,7 +434,6 @@ require('lazy').setup({
             'path',
             '--column',
             '--smart-case',
-            '--max-filesize=1M',
           },
           file_ignore_patterns = { '.git', '__pycache__', '.pytest_cache' },
         },
@@ -1243,3 +1245,7 @@ require('lazy').setup({
 -- enable wrap using the arrow keys in insert mode
 vim.opt.whichwrap:append '['
 vim.opt.whichwrap:append ']'
+
+-- search and replace shortcuts
+vim.keymap.set('n', '<leader>eb', ':%s/\\(bam.\\)\\@<!ProviderNames/bam.ProviderNames/g', { desc = '[E]rsetzen/Replace [B]am ProviderNames' })
+vim.keymap.set('n', '<leader>ep', ':%s/\\(bam.\\)\\@<!PlatformIds/bam.PlatformIds/g', { desc = '[E]rsetzen/Replace bam [P]latformIds' })
